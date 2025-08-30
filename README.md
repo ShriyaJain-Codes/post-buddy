@@ -1,5 +1,6 @@
 # Post Buddy
 
+<<<<<<< HEAD
 📊 **Social Media Post Analyzer**  
 Analyze PDFs or images to extract text, count words/characters, and get engagement suggestions.
 
@@ -35,3 +36,15 @@ Try it here: [https://post-buddy.onrender.com](https://post-buddy.onrender.com)
 - Word and character count  
 - AI fallback for images without text  
 - Engagement improvement suggestions  
+=======
+A web app that analyzes PDFs and images to extract text, count words/characters, and give engagement suggestions for social media posts.
+
+## Features
+- Extract text from PDFs and images (OCR included)
+- Word count & character count
+- AI-style fallback description for images without text
+- Suggestions for hashtags, post length, and calls-to-action
+
+## Installation
+1. Clone the repository:
+>>>>>>> 14f54e6779f0c47b54795976642850325a17ec80
