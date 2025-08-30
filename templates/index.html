@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📊 Post Buddy</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg,#667eea,#764ba2);
+      margin:0;padding:0;display:flex;justify-content:center;align-items:center;
+      min-height:100vh;overflow-x:hidden;
+    }
+    body::before, body::after {
+      content:'';position:absolute;border-radius:50%;
+      background:radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      width:400px;height:400px;animation:float 12s infinite linear;
+    }
+    body::after { width:300px;height:300px;animation-duration:18s;top:20%;left:70%; }
+    @keyframes float { 0%{transform:translateY(0) rotate(0);}50%{transform:translateY(-40px) rotate(180deg);}100%{transform:translateY(0) rotate(360deg);} }
+
+    .container {
+      background: rgba(255,255,255,0.15); border-radius:20px; padding:35px;
+      width:650px; backdrop-filter: blur(12px); box-shadow:0 8px 30px rgba(0,0,0,0.2);
+      text-align:center; color:#fff; animation:fadeIn 1s ease-in-out;
+      max-height:90vh; overflow-y:auto;
+    }
+    h1{margin-bottom:10px;font-size:28px;color:#fff;}
+    p{color:#e0e0e0;margin-bottom:20px;}
+
+    .upload-area { border:2px dashed rgba(255,255,255,0.6); border-radius:15px; padding:40px; background:rgba(255,255,255,0.1); cursor:pointer; transition:.3s;}
+    .upload-area:hover{background:rgba(255,255,255,0.2);}
+    .upload-area.dragover{background:rgba(255,255,255,0.3);border-color:#ffdd59;}
+    input[type=file]{display:none;}
+
+    button {
+      background: linear-gradient(45deg,#ff6a00,#ee0979); color:white; border:none; padding:12px 28px;
+      border-radius:12px; margin-top:25px; cursor:pointer; font-size:16px; transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+    button:hover{transform:translateY(-2px);box-shadow:0px 6px 18px rgba(0,0,0,0.3);}
+
+    .loading{margin-top:20px; display:none;}
+    .spinner{border:5px solid rgba(255,255,255,0.3); border-top:5px solid #ff6a00; border-radius:50%; width:45px; height:45px; animation:spin 1s linear infinite;margin:auto;}
+
+    .output{background:rgba(0,0,0,0.25);border-left:5px solid #ff6a00;margin-top:25px;padding:20px;border-radius:12px;text-align:left;white-space:pre-wrap;color:#fff;animation:fadeInUp 0.6s ease;}
+    .suggestions{margin-top:15px;background:rgba(255,255,255,0.1);padding:15px;border-radius:12px;border-left:4px solid #00ff99;color:#e0ffe0;}
+
+    @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Post Buddy</h1>
+    <p>Upload a PDF or Image to analyze social media posts ✨</p>
+
+    <div class="upload-area" id="uploadArea">
+      <p>Drag & Drop file here or <span style="font-weight:bold;color:#ffdd59;">Click to Upload</span></p>
+      <input type="file" id="fileInput" />
+    </div>
+
+    <button id="analyzeBtn">🚀 Analyze Document</button>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing... Please wait ⏳</p>
+    </div>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const loading = document.getElementById("loading");
+    const output = document.getElementById("output");
+    let selectedFile = null;
+
+    uploadArea.addEventListener("dragover", e=>{e.preventDefault(); uploadArea.classList.add("dragover");});
+    uploadArea.addEventListener("dragleave", ()=>uploadArea.classList.remove("dragover"));
+    uploadArea.addEventListener("drop", e=>{ e.preventDefault(); uploadArea.classList.remove("dragover"); fileInput.files=e.dataTransfer.files; selectedFile=fileInput.files[0];});
+    uploadArea.addEventListener("click", ()=>fileInput.click());
+    fileInput.addEventListener("change", ()=>selectedFile=fileInput.files[0]);
+
+    analyzeBtn.addEventListener("click", async ()=>{
+      if(!selectedFile){ alert("Please upload a file first!"); return;}
+      let formData = new FormData(); formData.append("file", selectedFile);
+      loading.style.display="block"; output.innerHTML="";
+      try{
+        let res = await fetch("/analyze", {method:"POST", body:formData});
+        let data = await res.json();
+        loading.style.display="none";
+        if(data.error){
+          output.innerHTML=`<div class="output">❌ Error: ${data.error}</div>`;
+        } else {
+          output.innerHTML=`<div class="output">
+              <b>✅ Word Count:</b> ${data.word_count}<br>
+              <b>✅ Character Count:</b> ${data.char_count}<br><br>
+              <b>📄 Extracted Text / Description:</b><br>${data.text}
+            </div>`;
+          if(data.suggestions && data.suggestions.length>0){
+            let sugHTML='<div class="suggestions"><b>💡 Suggestions to Improve Engagement:</b><ul>';
+            data.suggestions.forEach(s=>{sugHTML+=`<li>${s}</li>`;});
+            sugHTML+='</ul></div>';
+            output.innerHTML+=sugHTML;
+          }
+        }
+      }catch(err){
+        loading.style.display="none";
+        output.innerHTML=`<div class="output">❌ Failed: ${err.message}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📊 Post Buddy</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg,#667eea,#764ba2);
+      margin:0;padding:0;display:flex;justify-content:center;align-items:center;
+      min-height:100vh;overflow-x:hidden;
+    }
+    body::before, body::after {
+      content:'';position:absolute;border-radius:50%;
+      background:radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      width:400px;height:400px;animation:float 12s infinite linear;
+    }
+    body::after { width:300px;height:300px;animation-duration:18s;top:20%;left:70%; }
+    @keyframes float { 0%{transform:translateY(0) rotate(0);}50%{transform:translateY(-40px) rotate(180deg);}100%{transform:translateY(0) rotate(360deg);} }
+
+    .container {
+      background: rgba(255,255,255,0.15); border-radius:20px; padding:35px;
+      width:650px; backdrop-filter: blur(12px); box-shadow:0 8px 30px rgba(0,0,0,0.2);
+      text-align:center; color:#fff; animation:fadeIn 1s ease-in-out;
+      max-height:90vh; overflow-y:auto;
+    }
+    h1{margin-bottom:10px;font-size:28px;color:#fff;}
+    p{color:#e0e0e0;margin-bottom:20px;}
+
+    .upload-area { border:2px dashed rgba(255,255,255,0.6); border-radius:15px; padding:40px; background:rgba(255,255,255,0.1); cursor:pointer; transition:.3s;}
+    .upload-area:hover{background:rgba(255,255,255,0.2);}
+    .upload-area.dragover{background:rgba(255,255,255,0.3);border-color:#ffdd59;}
+    input[type=file]{display:none;}
+
+    button {
+      background: linear-gradient(45deg,#ff6a00,#ee0979); color:white; border:none; padding:12px 28px;
+      border-radius:12px; margin-top:25px; cursor:pointer; font-size:16px; transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+    button:hover{transform:translateY(-2px);box-shadow:0px 6px 18px rgba(0,0,0,0.3);}
+
+    .loading{margin-top:20px; display:none;}
+    .spinner{border:5px solid rgba(255,255,255,0.3); border-top:5px solid #ff6a00; border-radius:50%; width:45px; height:45px; animation:spin 1s linear infinite;margin:auto;}
+
+    .output{background:rgba(0,0,0,0.25);border-left:5px solid #ff6a00;margin-top:25px;padding:20px;border-radius:12px;text-align:left;white-space:pre-wrap;color:#fff;animation:fadeInUp 0.6s ease;}
+    .suggestions{margin-top:15px;background:rgba(255,255,255,0.1);padding:15px;border-radius:12px;border-left:4px solid #00ff99;color:#e0ffe0;}
+
+    @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Post Buddy</h1>
+    <p>Upload a PDF or Image to analyze social media posts ✨</p>
+
+    <div class="upload-area" id="uploadArea">
+      <p>Drag & Drop file here or <span style="font-weight:bold;color:#ffdd59;">Click to Upload</span></p>
+      <input type="file" id="fileInput" />
+    </div>
+
+    <button id="analyzeBtn">🚀 Analyze Document</button>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing... Please wait ⏳</p>
+    </div>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const loading = document.getElementById("loading");
+    const output = document.getElementById("output");
+    let selectedFile = null;
+
+    uploadArea.addEventListener("dragover", e=>{e.preventDefault(); uploadArea.classList.add("dragover");});
+    uploadArea.addEventListener("dragleave", ()=>uploadArea.classList.remove("dragover"));
+    uploadArea.addEventListener("drop", e=>{ e.preventDefault(); uploadArea.classList.remove("dragover"); fileInput.files=e.dataTransfer.files; selectedFile=fileInput.files[0];});
+    uploadArea.addEventListener("click", ()=>fileInput.click());
+    fileInput.addEventListener("change", ()=>selectedFile=fileInput.files[0]);
+
+    analyzeBtn.addEventListener("click", async ()=>{
+      if(!selectedFile){ alert("Please upload a file first!"); return;}
+      let formData = new FormData(); formData.append("file", selectedFile);
+      loading.style.display="block"; output.innerHTML="";
+      try{
+        let res = await fetch("/analyze", {method:"POST", body:formData});
+        let data = await res.json();
+        loading.style.display="none";
+        if(data.error){
+          output.innerHTML=`<div class="output">❌ Error: ${data.error}</div>`;
+        } else {
+          output.innerHTML=`<div class="output">
+              <b>✅ Word Count:</b> ${data.word_count}<br>
+              <b>✅ Character Count:</b> ${data.char_count}<br><br>
+              <b>📄 Extracted Text / Description:</b><br>${data.text}
+            </div>`;
+          if(data.suggestions && data.suggestions.length>0){
+            let sugHTML='<div class="suggestions"><b>💡 Suggestions to Improve Engagement:</b><ul>';
+            data.suggestions.forEach(s=>{sugHTML+=`<li>${s}</li>`;});
+            sugHTML+='</ul></div>';
+            output.innerHTML+=sugHTML;
+          }
+        }
+      }catch(err){
+        loading.style.display="none";
+        output.innerHTML=`<div class="output">❌ Failed: ${err.message}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>-->
+
+
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📊 Social Media Content Analyzer</title>
+  <style>
+    /* === Global styles === */
+    html {
+      scroll-behavior: smooth; /* smooth scrolling */
+    }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      min-height: 100vh;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* floating circles animation for background */
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 12s infinite linear;
+    }
+    body::after {
+      width: 300px;
+      height: 300px;
+      animation-duration: 18s;
+      top: 20%;
+      left: 70%;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0); }
+      50% { transform: translateY(-40px) rotate(180deg); }
+      100% { transform: translateY(0) rotate(360deg); }
+    }
+
+    /* container with glass effect */
+    .container {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 35px;
+      width: 650px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      text-align: center;
+      color: #fff;
+      animation: fadeIn 1s ease-in-out;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 28px;
+      color: #fff;
+    }
+    p {
+      color: #e0e0e0;
+      margin-bottom: 20px;
+    }
+
+    /* upload area */
+    .upload-area {
+      border: 2px dashed rgba(255,255,255,0.6);
+      border-radius: 15px;
+      padding: 40px;
+      background: rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .upload-area:hover { background: rgba(255,255,255,0.2); }
+    .upload-area.dragover {
+      background: rgba(255,255,255,0.3);
+      border-color: #ffdd59;
+    }
+
+    input[type=file] { display: none; }
+
+    /* analyze button */
+    button {
+      background: linear-gradient(45deg, #ff6a00, #ee0979);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      margin-top: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0px 6px 18px rgba(0,0,0,0.3);
+    }
+
+    /* loading spinner */
+    .loading { margin-top: 20px; display: none; }
+    .spinner {
+      border: 5px solid rgba(255,255,255,0.3);
+      border-top: 5px solid #ff6a00;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+
+    /* output box - expands automatically */
+    .output {
+      background: rgba(0, 0, 0, 0.25); /* dark theme for social media vibe */
+      border-left: 5px solid #ff6a00;
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: left;
+      white-space: pre-wrap;
+      color: #fff;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    /* animations */
+    @keyframes spin { 0%{ transform:rotate(0deg);} 100%{ transform:rotate(360deg);} }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+    @keyframes fadeInUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Post Buddy</h1>
+    <p>Upload a PDF or Image to analyze social media posts ✨</p>
+
+    <div class="upload-area" id="uploadArea">
+      <p>Drag & Drop file here or <span style="font-weight:bold;color:#ffdd59;">Click to Upload</span></p>
+      <input type="file" id="fileInput" />
+    </div>
+
+    <button id="analyzeBtn">🚀 Analyze Document</button>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing... Please wait ⏳</p>
+    </div>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const loading = document.getElementById("loading");
+    const output = document.getElementById("output");
+
+    let selectedFile = null;
+
+    // Drag & Drop
+    uploadArea.addEventListener("dragover", e => { e.preventDefault(); uploadArea.classList.add("dragover"); });
+    uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("dragover"));
+    uploadArea.addEventListener("drop", e => {
+      e.preventDefault(); uploadArea.classList.remove("dragover");
+      fileInput.files = e.dataTransfer.files; selectedFile = fileInput.files[0];
+    });
+
+    // Click upload
+    uploadArea.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => selectedFile = fileInput.files[0]);
+
+    // Analyze
+    analyzeBtn.addEventListener("click", async () => {
+      if (!selectedFile) { alert("Please upload a file first!"); return; }
+
+      let formData = new FormData();
+      formData.append("file", selectedFile);
+
+      loading.style.display = "block";
+      output.innerHTML = "";
+
+      try {
+        let res = await fetch("http://127.0.0.1:5000/analyze", { method:"POST", body:formData });
+        let data = await res.json();
+        loading.style.display = "none";
+
+        if (data.error) {
+          output.innerHTML = `<div class="output">❌ Error: ${data.error}</div>`;
+        } else {
+          output.innerHTML = `<div class="output">
+              <b>✅ Word Count:</b> ${data.word_count}<br>
+              <b>✅ Character Count:</b> ${data.char_count}<br><br>
+              <b>📄 Extracted Text:</b><br>${data.text}
+            </div>`;
+        }
+      } catch (err) {
+        loading.style.display = "none";
+        output.innerHTML = `<div class="output">❌ Failed: ${err.message}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>-->
+
+
+
+
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📊 Social Media Content Analyzer</title>
+  <style>
+    /* === Global styles === */
+    html {
+      scroll-behavior: smooth; /* smooth scrolling */
+    }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      min-height: 100vh;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* floating circles animation for background */
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 12s infinite linear;
+    }
+    body::after {
+      width: 300px;
+      height: 300px;
+      animation-duration: 18s;
+      top: 20%;
+      left: 70%;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0); }
+      50% { transform: translateY(-40px) rotate(180deg); }
+      100% { transform: translateY(0) rotate(360deg); }
+    }
+
+    /* container with glass effect */
+    .container {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 35px;
+      width: 650px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      text-align: center;
+      color: #fff;
+      animation: fadeIn 1s ease-in-out;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 28px;
+      color: #fff;
+    }
+    p {
+      color: #e0e0e0;
+      margin-bottom: 20px;
+    }
+
+    /* upload area */
+    .upload-area {
+      border: 2px dashed rgba(255,255,255,0.6);
+      border-radius: 15px;
+      padding: 40px;
+      background: rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .upload-area:hover { background: rgba(255,255,255,0.2); }
+    .upload-area.dragover {
+      background: rgba(255,255,255,0.3);
+      border-color: #ffdd59;
+    }
+
+    input[type=file] { display: none; }
+
+    /* analyze button */
+    button {
+      background: linear-gradient(45deg, #ff6a00, #ee0979);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      margin-top: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0px 6px 18px rgba(0,0,0,0.3);
+    }
+
+    /* loading spinner */
+    .loading { margin-top: 20px; display: none; }
+    .spinner {
+      border: 5px solid rgba(255,255,255,0.3);
+      border-top: 5px solid #ff6a00;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+
+    /* output box - expands automatically */
+    .output {
+      background: rgba(0, 0, 0, 0.25); /* dark theme for social media vibe */
+      border-left: 5px solid #ff6a00;
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: left;
+      white-space: pre-wrap;
+      color: #fff;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    /* animations */
+    @keyframes spin { 0%{ transform:rotate(0deg);} 100%{ transform:rotate(360deg);} }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+    @keyframes fadeInUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Post Buddy</h1>
+    <p>Upload a PDF or Image to analyze social media posts ✨</p>
+
+    <div class="upload-area" id="uploadArea">
+      <p>Drag & Drop file here or <span style="font-weight:bold;color:#ffdd59;">Click to Upload</span></p>
+      <input type="file" id="fileInput" />
+    </div>
+
+    <button id="analyzeBtn">🚀 Analyze Document</button>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing... Please wait ⏳</p>
+    </div>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const loading = document.getElementById("loading");
+    const output = document.getElementById("output");
+
+    let selectedFile = null;
+
+    // Drag & Drop
+    uploadArea.addEventListener("dragover", e => { e.preventDefault(); uploadArea.classList.add("dragover"); });
+    uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("dragover"));
+    uploadArea.addEventListener("drop", e => {
+      e.preventDefault(); uploadArea.classList.remove("dragover");
+      fileInput.files = e.dataTransfer.files; selectedFile = fileInput.files[0];
+    });
+
+    // Click upload
+    uploadArea.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => selectedFile = fileInput.files[0]);
+
+    // Analyze
+    analyzeBtn.addEventListener("click", async () => {
+      if (!selectedFile) { alert("Please upload a file first!"); return; }
+
+      let formData = new FormData();
+      formData.append("file", selectedFile);
+
+      loading.style.display = "block";
+      output.innerHTML = "";
+
+      try {
+        let res = await fetch("http://127.0.0.1:5000/analyze", { method:"POST", body:formData });
+        let data = await res.json();
+        loading.style.display = "none";
+
+        if (data.error) {
+          output.innerHTML = `<div class="output">❌ Error: ${data.error}</div>`;
+        } else {
+          output.innerHTML = `<div class="output">
+              <b>✅ Word Count:</b> ${data.word_count}<br>
+              <b>✅ Character Count:</b> ${data.char_count}<br><br>
+              <b>📄 Extracted Text:</b><br>${data.text}
+            </div>`;
+        }
+      } catch (err) {
+        loading.style.display = "none";
+        output.innerHTML = `<div class="output">❌ Failed: ${err.message}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>-->
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📄 Smart Document Analyzer</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      width: 600px;
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .upload-area {
+      border: 2px dashed #6c63ff;
+      border-radius: 15px;
+      padding: 30px;
+      background: #f9f9ff;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .upload-area:hover {
+      background: #eef0ff;
+    }
+
+    .upload-area.dragover {
+      background: #d6d4ff;
+      border-color: #4e46e5;
+    }
+
+    input[type=file] {
+      display: none;
+    }
+
+    button {
+      background: #6c63ff;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #574bdb;
+    }
+
+    .loading {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .spinner {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #6c63ff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+
+    .output {
+      background: #e6fff7;
+      border-left: 5px solid #28a745;
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: left;
+      white-space: pre-wrap;
+      animation: fadeInUp 0.6s ease;
+      color: #064635;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📄 Smart Document Analyzer</h1>
+    <p>Upload a PDF or Image document to extract text ✨</p>
+
+    <div class="upload-area" id="uploadArea">
+      <p>Drag & Drop file here or <span style="color:#6c63ff; font-weight:bold;">Click to Upload</span></p>
+      <input type="file" id="fileInput" />
+    </div>
+
+    <button id="analyzeBtn">Analyze Document</button>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing... Please wait ⏳</p>
+    </div>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const loading = document.getElementById("loading");
+    const output = document.getElementById("output");
+
+    let selectedFile = null;
+
+    // Handle drag and drop
+    uploadArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadArea.classList.add("dragover");
+    });
+
+    uploadArea.addEventListener("dragleave", () => {
+      uploadArea.classList.remove("dragover");
+    });
+
+    uploadArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove("dragover");
+      fileInput.files = e.dataTransfer.files;
+      selectedFile = fileInput.files[0];
+    });
+
+    // Handle click to upload
+    uploadArea.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", () => {
+      selectedFile = fileInput.files[0];
+    });
+
+    // Analyze file
+    analyzeBtn.addEventListener("click", async () => {
+      if (!selectedFile) {
+        alert("Please upload a file first!");
+        return;
+      }
+
+      let formData = new FormData();
+      formData.append("file", selectedFile);
+
+      loading.style.display = "block";
+      output.innerHTML = "";
+
+      try {
+        let res = await fetch("http://127.0.0.1:5000/analyze", {
+          method: "POST",
+          body: formData,
+        });
+        let data = await res.json();
+        loading.style.display = "none";
+
+        if (data.error) {
+          output.innerHTML = `<div class="output">❌ Error: ${data.error}</div>`;
+        } else {
+          output.innerHTML = `
+            <div class="output">
+              <b>✅ Word Count:</b> ${data.word_count}<br>
+              <b>✅ Character Count:</b> ${data.char_count}<br><br>
+              <b>📄 Extracted Text:</b><br>${data.text}
+            </div>`;
+        }
+      } catch (err) {
+        loading.style.display = "none";
+        output.innerHTML = `<div class="output">❌ Failed: ${err.message}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>-->
+
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📄 Smart Document Analyzer</title>
+  <style>
+    /* === Background with gradient + floating particles === */
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* floating circles animation */
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 12s infinite linear;
+    }
+    body::after {
+      width: 300px;
+      height: 300px;
+      animation-duration: 18s;
+      top: 20%;
+      left: 70%;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0); }
+      50% { transform: translateY(-40px) rotate(180deg); }
+      100% { transform: translateY(0) rotate(360deg); }
+    }
+
+    /* === Main container with glass effect === */
+    .container {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 35px;
+      width: 650px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      color: #fff;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 28px;
+      color: #fff;
+    }
+    p {
+      color: #e0e0e0;
+      margin-bottom: 20px;
+    }
+
+    /* === Upload box === */
+    .upload-area {
+      border: 2px dashed rgba(255,255,255,0.6);
+      border-radius: 15px;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .upload-area:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .upload-area.dragover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: #ffdd59;
+    }
+
+    input[type=file] {
+      display: none;
+    }
+
+    /* === Button === */
+    button {
+      background: linear-gradient(45deg, #ff6a00, #ee0979);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      margin-top: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0px 6px 18px rgba(0,0,0,0.3);
+    }
+
+    /* === Loading Spinner === */
+    .loading {
+      margin-top: 20px;
+      display: none;
+    }
+    .spinner {
+      border: 5px solid rgba(255,255,255,0.3);
+      border-top: 5px solid #ff6a00;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+
+    /* === Output box === */
+    .output {
+      background: rgba(255,255,255,0.15);
+      border-left: 5px solid #ff6a00;
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: left;
+      white-space: pre-wrap;
+      max-height: 250px;
+      overflow-y: auto;
+      color: #fff;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    /* Animations */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📄 Smart Document Analyzer</h1>
+    <p>Upload a PDF or Image to extract text ✨</p>
+
+    <div class="upload-area" id="uploadArea">
+      <p>Drag & Drop file here or <span style="font-weight:bold;color:#ffdd59;">Click to Upload</span></p>
+      <input type="file" id="fileInput" />
+    </div>
+
+    <button id="analyzeBtn">🚀 Analyze Document</button>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing... Please wait ⏳</p>
+    </div>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const loading = document.getElementById("loading");
+    const output = document.getElementById("output");
+
+    let selectedFile = null;
+
+    // Drag & Drop
+    uploadArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadArea.classList.add("dragover");
+    });
+    uploadArea.addEventListener("dragleave", () => uploadArea.classList.remove("dragover"));
+    uploadArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove("dragover");
+      fileInput.files = e.dataTransfer.files;
+      selectedFile = fileInput.files[0];
+    });
+
+    // Click upload
+    uploadArea.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => {
+      selectedFile = fileInput.files[0];
+    });
+
+    // Analyze
+    analyzeBtn.addEventListener("click", async () => {
+      if (!selectedFile) {
+        alert("Please upload a file first!");
+        return;
+      }
+
+      let formData = new FormData();
+      formData.append("file", selectedFile);
+
+      loading.style.display = "block";
+      output.innerHTML = "";
+
+      try {
+        let res = await fetch("http://127.0.0.1:5000/analyze", {
+          method: "POST",
+          body: formData,
+        });
+        let data = await res.json();
+        loading.style.display = "none";
+
+        if (data.error) {
+          output.innerHTML = `<div class="output">❌ Error: ${data.error}</div>`;
+        } else {
+          output.innerHTML = `
+            <div class="output">
+              <b>✅ Word Count:</b> ${data.word_count}<br>
+              <b>✅ Character Count:</b> ${data.char_count}<br><br>
+              <b>📄 Extracted Text:</b><br>${data.text}
+            </div>`;
+        }
+      } catch (err) {
+        loading.style.display = "none";
+        output.innerHTML = `<div class="output">❌ Failed: ${err.message}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>-->
+
+
+
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📄 Smart Document Analyzer</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      width: 600px;
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .upload-area {
+      border: 2px dashed #6c63ff;
+      border-radius: 15px;
+      padding: 30px;
+      background: #f9f9ff;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .upload-area:hover {
+      background: #eef0ff;
+    }
+
+    .upload-area.dragover {
+      background: #d6d4ff;
+      border-color: #4e46e5;
+    }
+
+    input[type=file] {
+      display: none;
+    }
+
+    button {
+      background: #6c63ff;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #574bdb;
+    }
+
+    .loading {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .spinner {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #6c63ff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+
+    .output {
+      background: #f1f3ff;
+      border-left: 5px solid #6c63ff;
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: left;
+      white-space: pre-wrap;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📄 Smart Document Analyzer</h1>
+    <p>Upload a PDF or Image document to extract text ✨</p>
+
+    <div class="upload-area" id="uploadArea">
+      <p>Drag & Drop file here or <span style="color:#6c63ff; font-weight:bold;">Click to Upload</span></p>
+      <input type="file" id="fileInput" />
+    </div>
+
+    <button id="analyzeBtn">Analyze Document</button>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing... Please wait ⏳</p>
+    </div>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const loading = document.getElementById("loading");
+    const output = document.getElementById("output");
+
+    let selectedFile = null;
+
+    // Handle drag and drop
+    uploadArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadArea.classList.add("dragover");
+    });
+
+    uploadArea.addEventListener("dragleave", () => {
+      uploadArea.classList.remove("dragover");
+    });
+
+    uploadArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove("dragover");
+      fileInput.files = e.dataTransfer.files;
+      selectedFile = fileInput.files[0];
+    });
+
+    // Handle click to upload
+    uploadArea.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", () => {
+      selectedFile = fileInput.files[0];
+    });
+
+    // Analyze file
+    analyzeBtn.addEventListener("click", async () => {
+      if (!selectedFile) {
+        alert("Please upload a file first!");
+        return;
+      }
+
+      let formData = new FormData();
+      formData.append("file", selectedFile);
+
+      loading.style.display = "block";
+      output.innerHTML = "";
+
+      try {
+        let res = await fetch("http://127.0.0.1:5000/analyze", {
+          method: "POST",
+          body: formData,
+        });
+        let data = await res.json();
+        loading.style.display = "none";
+
+        if (data.error) {
+          output.innerHTML = `<div class="output">❌ Error: ${data.error}</div>`;
+        } else {
+          output.innerHTML = `
+            <div class="output">
+              <b>✅ Word Count:</b> ${data.word_count}<br>
+              <b>✅ Character Count:</b> ${data.char_count}<br><br>
+              <b>📄 Extracted Text:</b><br>${data.text}
+            </div>`;
+        }
+      } catch (err) {
+        loading.style.display = "none";
+        output.innerHTML = `<div class="output">❌ Failed: ${err.message}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>-->
